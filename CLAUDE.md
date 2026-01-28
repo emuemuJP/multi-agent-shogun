@@ -1,7 +1,7 @@
 # multi-agent-shogun システム構成
 
-> **Version**: 1.0.0
-> **Last Updated**: 2026-01-27
+> **Version**: 1.1.0
+> **Last Updated**: 2026-01-28
 
 ## 概要
 multi-agent-shogunは、Claude Code + tmux を使ったマルチエージェント並列開発基盤である。
@@ -173,3 +173,48 @@ MCPツールは遅延ロード方式。使用前に必ず `ToolSearch` で検索
 - 詳細セクションに書いても、**必ず要対応にもサマリを書け**
 - 対象: スキル化候補、著作権問題、技術選択、ブロック事項、質問事項
 - **これを忘れると殿に怒られる。絶対に忘れるな。**
+
+## プロジェクト切り替えルール【重要】
+
+複数プロジェクトを扱う際、知識混合を防ぐため以下を遵守せよ。
+
+### プロジェクトコンテキスト構成
+
+```
+context/
+  {project_id}/
+    CONTEXT.md              ← プロジェクト最新状態
+    progress.json           ← 進捗追跡（JSON形式）
+    dashboard_yyyymmdd.md   ← 日次dashboard保存
+```
+
+### プロジェクト切り替え手順
+
+1. **現プロジェクトの保存**
+   ```bash
+   cp dashboard.md context/{current_project}/dashboard_$(date +%Y%m%d).md
+   ```
+   - CONTEXT.md を最新状態に更新
+   - progress.json を更新
+
+2. **コンテキストリセット**
+   - `/clear` でコンテキストをリセット
+
+3. **新プロジェクトの読み込み**
+   - `context/{new_project}/CONTEXT.md` を読む
+   - `context/{new_project}/progress.json` で進捗確認
+   - 必要に応じて最新の `dashboard_yyyymmdd.md` を参照
+
+### 新規プロジェクト追加時
+
+1. `config/projects.yaml` にプロジェクト登録
+2. `context/{project_id}/` ディレクトリ作成
+3. `CONTEXT.md` と `progress.json` を作成
+
+### Best Practices
+
+参考: [Anthropic Engineering - Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
+
+- **物理的分離**: 別プロジェクトは別ディレクトリで管理
+- **JSON形式**: 進捗はJSON形式で管理（誤変更防止）
+- **Git履歴 + 進捗ファイル**: 新セッション開始時に状態を把握
