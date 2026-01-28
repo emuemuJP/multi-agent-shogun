@@ -1,6 +1,6 @@
 # multi-agent-shogun システム構成
 
-> **Version**: 1.1.0
+> **Version**: 1.2.0
 > **Last Updated**: 2026-01-28
 
 ## 概要
@@ -14,6 +14,7 @@ multi-agent-shogunは、Claude Code + tmux を使ったマルチエージェン�
 1. **自分のpane名を確認**: `tmux display-message -p '#W'`
 2. **対応する instructions を読む**:
    - shogun → instructions/shogun.md
+   - gunshi (shogun:0.1) → instructions/gunshi.md
    - karo (multiagent:0.0) → instructions/karo.md
    - ashigaru (multiagent:0.1-8) → instructions/ashigaru.md
 3. **禁止事項を確認してから作業開始**
@@ -26,14 +27,14 @@ summaryの「次のステップ」を見てすぐ作業してはならぬ。ま�
 上様（人間 / The Lord）
   │
   ▼ 指示
-┌──────────────┐
-│   SHOGUN     │ ← 将軍（プロジェクト統括）
-│   (将軍)     │
-└──────┬───────┘
-       │ YAMLファイル経由
-       ▼
-┌──────────────┐
-│    KARO      │ ← 家老（タスク管理・分配）
+┌──────────────┐     ┌──────────────┐
+│   SHOGUN     │ ←──→│   GUNSHI     │ ← 軍師（計画レビュー・相談役）
+│   (将軍)     │     │   (軍師)     │
+└──────┬───────┘     └──────┬───────┘
+       │ YAMLファイル経由     │ レビュー
+       ▼                     ↕
+┌──────────────┐             │
+│    KARO      │ ←── レビュー依頼・結果受領
 │   (家老)     │
 └──────┬───────┘
        │ YAMLファイル経由
@@ -42,6 +43,12 @@ summaryの「次のステップ」を見てすぐ作業してはならぬ。ま�
 │A1 │A2 │A3 │A4 │A5 │A6 │A7 │A8 │ ← 足軽（実働部隊）
 └───┴───┴───┴───┴───┴───┴───┴───┘
 ```
+
+### 軍師（GUNSHI）の位置づけ
+- 将軍の参謀として、将軍セッション内に配置
+- 家老の計画を後追いでレビューし、漏れや矛盾を検出
+- 将軍・家老からの技術的相談に応じる
+- **自らタスクを実行せず、知略で軍を支える**
 
 ## 通信プロトコル
 
@@ -60,8 +67,11 @@ summaryの「次のステップ」を見てすぐ作業してはならぬ。ま�
 config/projects.yaml              # プロジェクト一覧
 status/master_status.yaml         # 全体進捗
 queue/shogun_to_karo.yaml         # Shogun → Karo 指示
+queue/shogun_to_gunshi.yaml       # Shogun → Gunshi 相談
+queue/karo_to_gunshi.yaml         # Karo → Gunshi レビュー依頼
 queue/tasks/ashigaru{N}.yaml      # Karo → Ashigaru 割当（各足軽専用）
 queue/reports/ashigaru{N}_report.yaml  # Ashigaru → Karo 報告
+queue/reports/gunshi_review.yaml  # Gunshi → Karo/Shogun レビュー結果
 dashboard.md                      # 人間用ダッシュボード
 ```
 
@@ -70,8 +80,9 @@ dashboard.md                      # 人間用ダッシュボード
 
 ## tmuxセッション構成
 
-### shogunセッション（1ペイン）
+### shogunセッション（2ペイン）
 - Pane 0: SHOGUN（将軍）
+- Pane 1: GUNSHI（軍師）← 将軍の参謀として同セッションに配置
 
 ### multiagentセッション（9ペイン）
 - Pane 0: karo（家老）
@@ -103,6 +114,7 @@ language: ja  # ja, en, es, zh, ko, fr, de 等
 
 ## 指示書
 - instructions/shogun.md - 将軍の指示書
+- instructions/gunshi.md - 軍師の指示書
 - instructions/karo.md - 家老の指示書
 - instructions/ashigaru.md - 足軽の指示書
 
@@ -110,7 +122,7 @@ language: ja  # ja, en, es, zh, ko, fr, de 等
 
 コンパクション用のsummaryを生成する際は、以下を必ず含めよ：
 
-1. **エージェントの役割**: 将軍/家老/足軽のいずれか
+1. **エージェントの役割**: 将軍/軍師/家老/足軽のいずれか
 2. **主要な禁止事項**: そのエージェントの禁止事項リスト
 3. **現在のタスクID**: 作業中のcmd_xxx
 
@@ -173,6 +185,37 @@ MCPツールは遅延ロード方式。使用前に必ず `ToolSearch` で検索
 - 詳細セクションに書いても、**必ず要対応にもサマリを書け**
 - 対象: スキル化候補、著作権問題、技術選択、ブロック事項、質問事項
 - **これを忘れると殿に怒られる。絶対に忘れるな。**
+
+## 軍師（GUNSHI）の運用ルール
+
+### 通信フロー
+
+```
+【計画レビュー】
+家老 → queue/karo_to_gunshi.yaml + send-keys → 軍師
+軍師 → queue/reports/gunshi_review.yaml + send-keys → 家老
+
+【技術相談】
+将軍 → queue/shogun_to_gunshi.yaml + send-keys → 軍師
+軍師 → queue/reports/gunshi_review.yaml + send-keys → 将軍
+```
+
+### レビュータイミング
+- **計画レビュー**: 家老がタスク分解後、足軽への割り当てと並行して軍師にレビュー依頼
+- **コードレビュー**: 足軽の成果物に対して、家老が軍師にレビュー依頼
+- **技術相談**: 将軍が技術的判断を要する際に軍師に相談
+
+### レビュー判定
+| 判定 | 意味 | アクション |
+|------|------|-----------|
+| `approved` | 問題なし | そのまま実行 |
+| `minor_issues` | 軽微な改善点 | 実行しつつ対応 |
+| `major_issues` | 重大な漏れ | 計画を修正 |
+| `rejected` | 根本的問題 | 再計画が必要 |
+
+### 軍師の状態確認
+- 相談前に軍師が処理中か確認: `tmux capture-pane -t shogun:0.1 -p | tail -20`
+- "thinking", "Effecting…" 等が表示中なら待機
 
 ## プロジェクト切り替えルール【重要】
 

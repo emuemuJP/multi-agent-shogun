@@ -6,6 +6,10 @@ agents:
   shogun:
     status: idle
     last_action: null
+  gunshi:
+    status: idle
+    current_review: null
+    last_action: null
   karo:
     status: idle
     current_subtasks: 0

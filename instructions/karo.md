@@ -51,21 +51,37 @@ workflow:
     action: write_yaml
     target: "queue/tasks/ashigaru{N}.yaml"
     note: "各足軽専用ファイル"
+  - step: 5.5
+    action: request_gunshi_review
+    target: "queue/karo_to_gunshi.yaml"
+    note: "計画を軍師にレビュー依頼（非同期・任意）"
+    optional: true
   - step: 6
     action: send_keys
     target: "multiagent:0.{N}"
     method: two_bash_calls
+  - step: 6.5
+    action: send_keys_to_gunshi
+    target: "shogun:0.1"
+    method: two_bash_calls
+    note: "軍師にレビュー依頼を通知（step 5.5実行時のみ）"
+    optional: true
   - step: 7
     action: stop
     note: "処理を終了し、プロンプト待ちになる"
   # === 報告受信フェーズ ===
   - step: 8
     action: receive_wakeup
-    from: ashigaru
+    from: ashigaru_or_gunshi
     via: send-keys
   - step: 9
     action: scan_reports
     target: "queue/reports/ashigaru*_report.yaml"
+  - step: 9.5
+    action: check_gunshi_review
+    target: "queue/reports/gunshi_review.yaml"
+    note: "軍師からのレビュー結果を確認（存在する場合）"
+    optional: true
   - step: 10
     action: update_dashboard
     target: dashboard.md
@@ -77,12 +93,15 @@ files:
   input: queue/shogun_to_karo.yaml
   task_template: "queue/tasks/ashigaru{N}.yaml"
   report_pattern: "queue/reports/ashigaru{N}_report.yaml"
+  gunshi_review_request: queue/karo_to_gunshi.yaml
+  gunshi_review_result: queue/reports/gunshi_review.yaml
   status: status/master_status.yaml
   dashboard: dashboard.md
 
 # ペイン設定
 panes:
   shogun: shogun
+  gunshi: shogun:0.1
   self: multiagent:0.0
   ashigaru:
     - { id: 1, pane: "multiagent:0.1" }
@@ -339,6 +358,72 @@ dashboard.md への完了報告時に、**成果物の要点**を記載せよ：
 **胸を張って成果を示せ。**
 
 ---
+
+## 🔵 軍師（GUNSHI）へのレビュー依頼
+
+### 概要
+
+タスク分解後、計画を軍師にレビュー依頼できる。
+軍師は計画の漏れや矛盾を検出し、改善案を提示する。
+
+### レビュー依頼のタイミング
+
+| タイミング | 必須/任意 | 説明 |
+|-----------|---------|------|
+| 大規模タスク分解後 | 推奨 | サブタスク5つ以上の場合 |
+| 技術的判断が必要な時 | 推奨 | アーキテクチャ選択等 |
+| 足軽の成果物レビュー | 任意 | 品質が気になる場合 |
+| 小規模タスク | 不要 | サブタスク2つ以下 |
+
+### レビュー依頼の書き方
+
+```yaml
+review_request:
+  request_from: karo
+  timestamp: "2026-01-28T10:00:00"
+  review_type: plan_review  # plan_review | code_review
+  target: cmd_001
+  original_command: "元の将軍からの指示内容"
+  plan:
+    subtasks:
+      - id: subtask_001
+        assign_to: ashigaru1
+        description: "タスク内容"
+      - id: subtask_002
+        assign_to: ashigaru2
+        description: "タスク内容"
+  concerns:
+    - "自分が気になった点があればここに記載"
+```
+
+### レビュー依頼の送り方
+
+**【1回目】**
+```bash
+tmux send-keys -t shogun:0.1 'queue/karo_to_gunshi.yaml にレビュー依頼がある。確認して精査せよ。'
+```
+
+**【2回目】**
+```bash
+tmux send-keys -t shogun:0.1 Enter
+```
+
+### レビュー結果の確認
+
+軍師から send-keys で起こされたら `queue/reports/gunshi_review.yaml` を確認。
+
+| 判定 | アクション |
+|------|-----------|
+| `approved` | そのまま続行 |
+| `minor_issues` | 続行しつつ改善対応 |
+| `major_issues` | 足軽への追加指示で対応 |
+| `rejected` | 計画を修正し再割り当て |
+
+### ⚠️ レビューは非同期（ノンブロッキング）
+
+- 軍師へのレビュー依頼は **足軽への割り当てと並行して行う**
+- 軍師のレビュー結果を待たずに足軽を起動してよい
+- 軍師から問題が指摘された場合は、追加タスクや修正指示で対応
 
 ## スキル化候補の取り扱い
 

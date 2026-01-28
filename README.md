@@ -4,7 +4,7 @@
 
 **Multi-Agent Orchestration System for Claude Code**
 
-*One command. Eight AI agents working in parallel.*
+*One command. Eight AI agents working in parallel. One strategist reviewing the plan.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-blueviolet)](https://claude.ai)
@@ -30,12 +30,13 @@
         You (The Lord)
              │
              ▼ Give orders
-      ┌─────────────┐
-      │   SHOGUN    │  ← Receives your command, delegates immediately
-      └──────┬──────┘
-             │ YAML files + tmux
-      ┌──────▼──────┐
-      │    KARO     │  ← Distributes tasks to workers
+      ┌─────────────┐   ┌─────────────┐
+      │   SHOGUN    │◄─►│   GUNSHI    │  ← Reviews plans, advises on tech
+      └──────┬──────┘   └──────┬──────┘
+             │                  │ Review
+             │ YAML + tmux     ↕
+      ┌──────▼──────┐         │
+      │    KARO     │◄── Review feedback
       └──────┬──────┘
              │
     ┌─┬─┬─┬─┴─┬─┬─┬─┐
@@ -204,16 +205,17 @@ If you prefer to install dependencies manually:
 
 ### ✅ What Happens After Setup
 
-After running either option, **10 AI agents** will start automatically:
+After running either option, **11 AI agents** will start automatically:
 
 | Agent | Role | Quantity |
 |-------|------|----------|
 | 🏯 Shogun | Commander - receives your orders | 1 |
+| 🧠 Gunshi | Strategist - reviews plans, advises on tech decisions | 1 |
 | 📋 Karo | Manager - distributes tasks | 1 |
 | ⚔️ Ashigaru | Workers - execute tasks in parallel | 8 |
 
 You'll see tmux sessions created:
-- `shogun` - Connect here to give commands
+- `shogun` - Connect here to give commands (includes Gunshi strategist)
 - `multiagent` - Workers running in background
 
 ---
@@ -330,6 +332,7 @@ Perfect for:
 | Agent | Model | Thinking | Reason |
 |-------|-------|----------|--------|
 | Shogun | Opus | Disabled | Delegation & dashboard updates don't need deep reasoning |
+| Gunshi | Default | Enabled | Plan review and code review require deep analysis |
 | Karo | Default | Enabled | Task distribution requires careful judgment |
 | Ashigaru | Default | Enabled | Actual implementation needs full capabilities |
 
@@ -382,11 +385,12 @@ Review and approve them to grow your personal skill library.
 
 ### Why Hierarchical Structure?
 
-The Shogun → Karo → Ashigaru hierarchy exists for:
+The Shogun → Karo → Ashigaru hierarchy (with Gunshi as advisor) exists for:
 
 1. **Immediate Response**: Shogun delegates instantly and returns control to you
 2. **Parallel Execution**: Karo distributes to multiple Ashigaru simultaneously
 3. **Separation of Concerns**: Shogun decides "what", Karo decides "who"
+4. **Quality Assurance**: Gunshi reviews plans to catch gaps before execution
 
 ### Why YAML + send-keys?
 
@@ -534,7 +538,7 @@ language: en   # Japanese + English translation
 │  shutsujin_departure.sh                                             │
 │      │                                                              │
 │      ├──▶ Create tmux sessions                                      │
-│      │         • "shogun" session (1 pane)                          │
+│      │         • "shogun" session (2 panes: Shogun + Gunshi)        │
 │      │         • "multiagent" session (9 panes, 3x3 grid)           │
 │      │                                                              │
 │      ├──▶ Reset queue files and dashboard                           │
@@ -616,6 +620,7 @@ multi-agent-shogun/
 │
 ├── instructions/             # Agent instruction files
 │   ├── shogun.md             # Commander instructions
+│   ├── gunshi.md             # Strategist/reviewer instructions
 │   ├── karo.md               # Manager instructions
 │   └── ashigaru.md           # Worker instructions
 │

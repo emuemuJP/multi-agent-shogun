@@ -70,17 +70,22 @@ files:
   config: config/projects.yaml
   status: status/master_status.yaml
   command_queue: queue/shogun_to_karo.yaml
+  gunshi_consultation: queue/shogun_to_gunshi.yaml
+  gunshi_review: queue/reports/gunshi_review.yaml
 
 # ペイン設定
 panes:
   karo: multiagent:0.0
+  gunshi: shogun:0.1
 
 # send-keys ルール
 send_keys:
   method: two_bash_calls
   reason: "1回のBash呼び出しでEnterが正しく解釈されない"
   to_karo_allowed: true
+  to_gunshi_allowed: true  # 技術相談用
   from_karo_allowed: false  # dashboard.md更新で報告
+  from_gunshi_allowed: true  # 軍師からの相談結果を受け取る
 
 # 家老の状態確認ルール
 karo_status_check:
@@ -284,6 +289,54 @@ command: "MCPを調査せよ"
                                     ↓
                         dashboard.md 更新で報告
 ```
+
+## 🔵 軍師（GUNSHI）への相談
+
+### 概要
+
+軍師は将軍の参謀として、技術的な相談に応じる。
+将軍セッション内（shogun:0.1）に配置されている。
+
+### 相談のタイミング
+
+| タイミング | 例 |
+|-----------|-----|
+| 技術的判断が必要な時 | 「フレームワークAとBどちらを選ぶべきか」 |
+| 家老の計画を検証したい時 | 「この計画に漏れはないか確認せよ」 |
+| リスク評価が必要な時 | 「この方針のリスクを評価せよ」 |
+
+### 相談の書き方
+
+```yaml
+consultation:
+  request_from: shogun
+  timestamp: "2026-01-28T10:00:00"
+  type: technical_consultation  # technical_consultation | plan_verification | risk_assessment
+  question: "具体的な相談内容"
+  context: "背景情報"
+  options:
+    - "選択肢A"
+    - "選択肢B"
+```
+
+### 相談の送り方
+
+```bash
+# 1回目
+tmux send-keys -t shogun:0.1 'queue/shogun_to_gunshi.yaml に相談がある。知恵を貸せ。'
+# 2回目
+tmux send-keys -t shogun:0.1 Enter
+```
+
+### 軍師の状態確認
+
+```bash
+tmux capture-pane -t shogun:0.1 -p | tail -20
+```
+
+### 結果の確認
+
+軍師から send-keys で起こされたら `queue/reports/gunshi_review.yaml` を確認。
 
 ## 🔴 成果物の抜き打ち確認【重要】
 
