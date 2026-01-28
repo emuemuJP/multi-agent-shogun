@@ -1,0 +1,29 @@
+# Consensus Tracking
+# 合意形成状況
+
+topic_id: null
+
+# Current consensus status
+status: none  # none, partial, full
+
+# Points of agreement
+agreements: []
+# Example:
+# - point: "技術的には実現可能"
+#   agreed_by: [claude, gemini, codex]
+#   timestamp: "2026-01-28T10:00:00"
+
+# Points of disagreement
+disagreements: []
+# Example:
+# - point: "実装コストについて"
+#   positions:
+#     claude: "コストは許容範囲"
+#     gemini: "コストが高すぎる"
+#   timestamp: "2026-01-28T10:05:00"
+
+# Final conclusion (if reached)
+conclusion: null
+
+# Action items derived from discussion
+action_items: []

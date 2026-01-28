@@ -1,0 +1,19 @@
+# Discussion Topic
+# 討論テーマ
+
+topic_id: null
+title: null
+description: null
+context: null
+
+started_at: null
+current_phase: null
+current_round: 0
+
+status: idle  # idle, active, completed, paused
+
+# Initiator (who started the discussion)
+initiated_by: user
+
+# Special instructions for this discussion
+instructions: null

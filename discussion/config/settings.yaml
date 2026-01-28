@@ -1,0 +1,62 @@
+# Discussion System Configuration
+# 複数AIモデル討論システム設定
+
+version: "1.0.0"
+
+# Language setting (affects agent responses)
+language: ja  # ja, en
+
+# Participating models
+models:
+  - id: claude
+    name: "Claude"
+    pane: 0
+    color: "1;35"  # Purple
+    role: "論理的分析と構造化思考を得意とする"
+
+  - id: gemini
+    name: "Gemini"
+    pane: 1
+    color: "1;32"  # Green
+    role: "創造的発想と多角的視点を提供する"
+
+  - id: codex
+    name: "Codex"
+    pane: 2
+    color: "1;33"  # Yellow
+    role: "技術的実装と実用性を重視する"
+
+# Visualizer settings
+visualizer:
+  pane: 3
+  color: "1;36"  # Cyan
+  update_interval: 5  # seconds
+  show_summary: true
+  show_consensus: true
+  show_timeline: true
+
+# Discussion rules
+discussion:
+  max_rounds: 10
+  turn_timeout: 120  # seconds per turn
+  require_response_to_others: true
+  consensus_threshold: 2  # minimum models agreeing
+
+  phases:
+    - name: "opening"
+      description: "各自の初期見解を述べる"
+      rounds: 1
+    - name: "debate"
+      description: "意見交換と議論"
+      rounds: 5
+    - name: "synthesis"
+      description: "合意形成と結論"
+      rounds: 2
+
+# Communication protocol
+protocol:
+  topic_file: "queue/topic.yaml"
+  turns_dir: "queue/turns/"
+  responses_dir: "queue/responses/"
+  visualizer_output: "visualizer/dashboard.md"
+  consensus_file: "queue/consensus.yaml"
