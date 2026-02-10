@@ -1,0 +1,7 @@
+benchmark_config:
+  name: "__CONFIG_NAME__"
+  description: "__DESCRIPTION__"
+  gunshi_enabled: true       # true/false
+  ashigaru_count: 8          # 1-8
+  karo_requests_gunshi_review: true  # true/false
+  notes: ""

@@ -51,21 +51,42 @@ workflow:
     action: write_yaml
     target: "queue/tasks/ashigaru{N}.yaml"
     note: "各足軽専用ファイル"
+  # === サブタスク3つ以上: 軍師ブロッキングレビュー ===
   - step: 5.5
     action: request_gunshi_review
     target: "queue/karo_to_gunshi.yaml"
-    note: "計画を軍師にレビュー依頼（非同期・任意）"
-    optional: true
+    condition: "サブタスク3つ以上の場合は必須"
+    note: "計画を軍師にレビュー依頼"
+    optional_if: "サブタスク2つ以下"
+  - step: 5.6
+    action: send_keys_to_gunshi
+    target: "shogun:0.1"
+    method: two_bash_calls
+    note: "軍師にレビュー依頼を通知"
+    optional_if: "サブタスク2つ以下"
+  - step: 5.7
+    action: stop
+    condition: "サブタスク3つ以上の場合"
+    note: "軍師のレビュー完了まで停止。軍師がsend-keysで起こす"
+    optional_if: "サブタスク2つ以下"
+  # === 軍師レビュー後の再開 ===
+  - step: 5.8
+    action: receive_wakeup
+    from: gunshi
+    via: send-keys
+    condition: "サブタスク3つ以上の場合"
+    optional_if: "サブタスク2つ以下"
+  - step: 5.9
+    action: check_gunshi_review
+    target: "queue/reports/gunshi_review.yaml"
+    condition: "サブタスク3つ以上の場合"
+    note: "approved/minor_issues→足軽割当へ、major_issues/rejected→計画修正して5.5へ戻る"
+    optional_if: "サブタスク2つ以下"
+  # === 足軽への割り当て ===
   - step: 6
     action: send_keys
     target: "multiagent:0.{N}"
     method: two_bash_calls
-  - step: 6.5
-    action: send_keys_to_gunshi
-    target: "shogun:0.1"
-    method: two_bash_calls
-    note: "軍師にレビュー依頼を通知（step 5.5実行時のみ）"
-    optional: true
   - step: 7
     action: stop
     note: "処理を終了し、プロンプト待ちになる"
@@ -370,10 +391,10 @@ dashboard.md への完了報告時に、**成果物の要点**を記載せよ：
 
 | タイミング | 必須/任意 | 説明 |
 |-----------|---------|------|
-| 大規模タスク分解後 | 推奨 | サブタスク5つ以上の場合 |
+| サブタスク3つ以上 | **必須（ブロッキング）** | 軍師レビュー完了まで足軽を起動しない |
 | 技術的判断が必要な時 | 推奨 | アーキテクチャ選択等 |
 | 足軽の成果物レビュー | 任意 | 品質が気になる場合 |
-| 小規模タスク | 不要 | サブタスク2つ以下 |
+| サブタスク2つ以下 | 不要 | そのまま足軽に割り当て可 |
 
 ### レビュー依頼の書き方
 
@@ -419,11 +440,17 @@ tmux send-keys -t shogun:0.1 Enter
 | `major_issues` | 足軽への追加指示で対応 |
 | `rejected` | 計画を修正し再割り当て |
 
-### ⚠️ レビューは非同期（ノンブロッキング）
+### ⚠️ レビューモード（ブロッキング / ノンブロッキング）
 
-- 軍師へのレビュー依頼は **足軽への割り当てと並行して行う**
-- 軍師のレビュー結果を待たずに足軽を起動してよい
-- 軍師から問題が指摘された場合は、追加タスクや修正指示で対応
+**サブタスク3つ以上 → ブロッキング（必須）**
+- 軍師にレビュー依頼を送った後、**停止して結果を待つ**
+- 軍師がsend-keysで起こすまで足軽を起動してはならない
+- `approved` / `minor_issues` → 足軽に割り当て
+- `major_issues` / `rejected` → 計画を修正して再レビュー
+
+**サブタスク2つ以下 → ノンブロッキング（任意）**
+- 現状通り、軍師レビューなしで足軽に割り当て可
+- 技術的に不安がある場合のみ、任意でレビュー依頼
 
 ## スキル化候補の取り扱い
 

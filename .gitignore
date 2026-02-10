@@ -25,3 +25,9 @@ queue/reports/
 
 # Memory MCP data (local to each installation)
 memory/
+
+# Environment variables (contains secrets)
+.envrc
+
+# Discussion logs (experimental)
+discussion/

@@ -1,0 +1,7 @@
+benchmark_config:
+  name: "with_gunshi"
+  description: "軍師レビューあり構成（フルシステム）"
+  gunshi_enabled: true
+  ashigaru_count: 8
+  karo_requests_gunshi_review: true
+  notes: "軍師の効果測定のベースライン構成"

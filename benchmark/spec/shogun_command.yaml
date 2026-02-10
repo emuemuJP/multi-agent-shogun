@@ -1,0 +1,13 @@
+queue:
+  - id: cmd_benchmark_001
+    timestamp: "__TIMESTAMP__"
+    command: |
+      以下の仕様書に基づいてPython CLIアプリケーション「gradecalc」を構築せよ。
+
+      仕様書: benchmark/spec/requirements.md を読んで全要件（R01-R10）を実装すること。
+      成果物: benchmark/runs/__RUN_ID__/output/gradecalc.py（単一ファイル）
+      制約: Python標準ライブラリのみ使用可。外部パッケージ禁止。
+    project: benchmark
+    priority: high
+    status: pending
+    output_path: "benchmark/runs/__RUN_ID__/output/"

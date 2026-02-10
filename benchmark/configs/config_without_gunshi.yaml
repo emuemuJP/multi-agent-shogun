@@ -1,0 +1,7 @@
+benchmark_config:
+  name: "without_gunshi"
+  description: "軍師レビューなし構成（コントロール群）"
+  gunshi_enabled: false
+  ashigaru_count: 8
+  karo_requests_gunshi_review: false
+  notes: "軍師の効果を測定するためのコントロール構成"

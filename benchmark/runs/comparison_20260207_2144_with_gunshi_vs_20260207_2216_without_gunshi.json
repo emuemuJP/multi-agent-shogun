@@ -1,0 +1,55 @@
+{
+  "run_a": "20260207_2144_with_gunshi",
+  "run_b": "20260207_2216_without_gunshi",
+  "scores": {
+    "total": {
+      "a": 100,
+      "b": 100,
+      "delta": 0
+    },
+    "functional": {
+      "a": 60,
+      "b": 60,
+      "delta": 0
+    },
+    "edge_cases": {
+      "a": 20,
+      "b": 20,
+      "delta": 0
+    },
+    "code_quality": {
+      "a": 20,
+      "b": 20,
+      "delta": 0
+    }
+  },
+  "process": {
+    "duration_seconds": {
+      "a": 1770,
+      "b": 479,
+      "delta": 1291
+    },
+    "subtasks": {
+      "a": 7,
+      "b": 7,
+      "delta": 0
+    },
+    "failed_tasks": {
+      "a": 0,
+      "b": 0,
+      "delta": 0
+    },
+    "gunshi_reviews": {
+      "a": 1,
+      "b": 0
+    },
+    "gunshi_findings": {
+      "a": 4,
+      "b": 0
+    }
+  },
+  "test_diffs": {
+    "passed_in_a_only": [],
+    "passed_in_b_only": []
+  }
+}
